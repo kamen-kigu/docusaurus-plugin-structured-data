@@ -19,14 +19,6 @@ module.exports = function (context) {
     const titleDelimiter = siteConfig.titleDelimiter;
     const verbose = structuredData.verbose || false;
 
-    // need to build inverted index as the "name" property is not always populated for blog articles
-    verbose ? console.log(`building inverted index for authors...`): null;
-    const authorInvIndex = {};
-    for (const [key, value] of Object.entries(structuredData.authors)) {
-        authorInvIndex[value.url] = key;
-    }
-    verbose ? console.log(`inverted author index :\n${JSON.stringify(authorInvIndex, null, 2)}`): null;
-
     const orgData = {
         '@type': 'Organization',
         '@id': `${baseUrl}/#organization`,
@@ -135,27 +127,10 @@ module.exports = function (context) {
                     // get page type and image...
                     let webPageType = 'website';
                     let webPageImage = themeConfig.image;
-                    let articleAuthorUrl;
-                    let articleAuthorName;
-                    let articlePublishedTime;
-                    let articleKeywords = [];
 
                     const metaNodeList = dom.window.document.querySelectorAll('meta');
 
                     for (const value of metaNodeList.values()) {
-
-                        // check name attribute
-                        switch(value.name){
-                            case 'author':
-                                articleAuthorName = value.content;
-                                break;
-                            case 'keywords':
-                                articleKeywords = value.content.split(',');
-                                break;
-                            default:
-                                break;
-                        };
-    
                         // check property attribute
                         switch(value.getAttribute('property')){
                             case 'og:type':
@@ -164,14 +139,6 @@ module.exports = function (context) {
                             case 'og:image':
                                 webPageImage = value.content;
                                 break;
-                            case 'article:author':
-                                articleAuthorUrl = value.content;
-                                // if articleAuthorUrl contains multiple authors, only use the first one
-                                articleAuthorUrl = articleAuthorUrl.split(',')[0];
-                                break;
-                            case 'article:published_time':
-                                articlePublishedTime = value.content;
-                                break;
                             default:
                                 break;
                         };
@@ -179,20 +146,6 @@ module.exports = function (context) {
 
                     verbose ? console.log(`webPageType: ${webPageType}`): null;
                     verbose ? console.log(`webPageImage: ${webPageImage}`): null;
-
-                    if(webPageType === 'article'){
-
-                        verbose ? console.log(`articleAuthorUrl: ${articleAuthorUrl}`): null;
-
-                        if(!articleAuthorName){
-                            verbose ? console.log(`articleAuthorName is not defined for route: ${route}, using inverted index`): null;
-                            articleAuthorName = authorInvIndex[articleAuthorUrl];
-                        }
-
-                        verbose ? console.log(`articleAuthorName: ${articleAuthorName}`): null;
-                        verbose ? console.log(`articlePublishedTime: ${articlePublishedTime}`): null;
-                        verbose ? console.log(`articleKeywords: ${articleKeywords}`): null;
-                    }
                     
                     //
                     // get WebPage data
@@ -319,89 +272,6 @@ module.exports = function (context) {
                     }
                     breadcrumbData.itemListElement.push(leafPageElement);
 
-                    // article related structured data
-                    let articleData;
-                    let imageObjectData;
-                    let personData;
-
-                    if(webPageType === 'article'){
-
-                        verbose ? console.log('Adding article data...'): null;
-
-                        // get word count
-                        let wordCount = 0;
-                        let paragraphs = dom.window.document.getElementsByTagName('p'); 
-                        for (let i = 0; i < paragraphs.length; i++) {
-                            wordCount += paragraphs[i].textContent.split(' ').length;
-                        }
-                        
-                        // article data
-                        articleData = {
-                            '@type': 'Article',
-                            '@id': `${webPageUrl}/#article`,
-                            isPartOf: {
-                                '@type': 'WebPage',
-                                '@id': `${webPageUrl}/#webpage`
-                            },
-                            author: {
-                                name: articleAuthorName,
-                                '@id': `${baseUrl}/#/schema/person/${structuredData.authors[articleAuthorName].authorId}`
-                            },
-                            headline: webPageTitle,
-                            datePublished: articlePublishedTime,
-                            dateModified: articlePublishedTime,
-                            mainEntityOfPage: {
-                                '@id': `${webPageUrl}/#webpage`
-                            },
-                            wordCount: wordCount,
-                            publisher: {
-                                '@id': `${baseUrl}/#organization`
-                            },
-                            image: {
-                                '@id': `${webPageUrl}/#primaryimage`
-                            },
-                            thumbnailUrl: `${webPageImage}`,
-                            keywords: articleKeywords,
-                            articleSection: [
-                                "Blog",
-                            ],
-                            inLanguage: webPageData.inLanguage,
-                        };
-
-                        // image object data
-                        imageObjectData = {
-                            '@type': 'ImageObject',
-                            inLanguage: webPageData.inLanguage,
-                            '@id': `${webPageUrl}/#primaryimage`,
-                            url: `${webPageImage}`,
-                            contentUrl: `${webPageImage}`,
-                            caption: `${webPageTitle}`,
-                            width: structuredData.featuredImageDimensions.width,
-                            height: structuredData.featuredImageDimensions.height,
-                        };
-
-                        // person data
-
-                        verbose ? console.log(`Getting person data for ${articleAuthorName}...`): null;
-
-                        personData = {
-                            '@type': 'Person',
-                            '@id': `${baseUrl}/#/schema/person/${structuredData.authors[articleAuthorName].authorId}`,
-                            name: `${articleAuthorName}`,
-                            image: {
-                                '@type': 'ImageObject',
-                                inLanguage: webPageData.inLanguage,
-                                '@id': `${baseUrl}/#/schema/person/image/${structuredData.authors[articleAuthorName].authorId}`,
-                                url: structuredData.authors[articleAuthorName].imageUrl,
-                                contentUrl: structuredData.authors[articleAuthorName].imageUrl,
-                                caption: `${articleAuthorName}`,
-                                },
-                            sameAs: structuredData.authors[articleAuthorName].sameAs,
-                            url: `${articleAuthorUrl}`,
-                        }
-                            
-                    };
-
                     //
                     // add data to graph
                     //
@@ -412,21 +282,10 @@ module.exports = function (context) {
                     data['@context'] = 'https://schema.org';
                     data['@graph'] = [];
 
-
-                    if(webPageType === 'article'){
-                        data['@graph'].push(articleData);
-                        data['@graph'].push(webPageData);
-                        data['@graph'].push(imageObjectData);
-                        data['@graph'].push(breadcrumbData);
-                        data['@graph'].push(webSiteData);
-                        data['@graph'].push(orgData);
-                        articleAuthorName ? data['@graph'].push(personData): null;
-                    } else {
-                        data['@graph'].push(webPageData);
-                        data['@graph'].push(breadcrumbData);
-                        data['@graph'].push(webSiteData);
-                        data['@graph'].push(orgData);
-                    }
+                    data['@graph'].push(webPageData);
+                    data['@graph'].push(breadcrumbData);
+                    data['@graph'].push(webSiteData);
+                    data['@graph'].push(orgData);
 
                     let script = dom.window.document.createElement('script');
                     script.type = 'application/ld+json';

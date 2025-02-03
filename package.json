@@ -1,7 +1,7 @@
 {
-    "name": "@stackql/docusaurus-plugin-structured-data",
-    "version": "1.3.2",
-    "description": "A plugin which adds structured data to your docusaurus site.",
+    "name": "@kamen-kigu/docusaurus-plugin-structured-data",
+    "version": "1.3.21",
+    "description": "Forked plugin which adds structured data to kig.wiki docusaurus site.",
     "main": "src/index.js",
     "publishConfig": {
       "access": "public"
@@ -14,8 +14,9 @@
     },
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/stackql/docusaurus-plugin-structured-data"
+      "url": "git+https://github.com/kamen-kigu/docusaurus-plugin-structured-data"
     },
+
     "keywords": [
       "docusaurus",
       "structured data",
@@ -23,10 +24,10 @@
       "yoast",
       "plugin"
     ],
-    "author": "Jeffrey Aven @ StackQL Studios",
+    "author": "Kamen Kigu",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/stackql/docusaurus-plugin-structured-data/issues"
+      "url": "https://github.com/kamen-kigu/docusaurus-plugin-structured-data/issues"
     },
-    "homepage": "https://github.com/stackql/docusaurus-plugin-structured-data#readme"
+    "homepage": "https://github.com/kamen-kigu/docusaurus-plugin-structured-data#readme"
   }
