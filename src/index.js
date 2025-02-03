@@ -119,14 +119,23 @@ module.exports = function (context) {
                     
                     const webPageUrl = `${baseUrl}${route}`;
                     verbose ? console.log(`webPageUrl: ${webPageUrl}`): null;
-                    const webPageTitle = dom.window.document.querySelector('title').text.replace(` ${titleDelimiter} ${orgName}`, '');
+                    
+                    // Add null check for title
+                    const titleElement = dom.window.document.querySelector('title');
+                    const webPageTitle = titleElement 
+                        ? titleElement.text.replace(` ${titleDelimiter} ${orgName}`, '')
+                        : 'Kig.Wiki';
                     verbose ? console.log(`webPageTitle: ${webPageTitle}`): null;
-                    const webPageDescription = dom.window.document.head.querySelector('[name~=description][content]').content;
+                    
+                    // Add null check for description meta tag with default value
+                    const descriptionMeta = dom.window.document.head.querySelector('[name~=description][content]');
+                    const webPageDescription = descriptionMeta ? descriptionMeta.content : 'Kig.Wiki - Kigurumi Masking Guide';
                     verbose ? console.log(`webPageDescription: ${webPageDescription}`): null;
                     
                     // get page type and image...
                     let webPageType = 'website';
-                    let webPageImage = themeConfig.image;
+                    // Add default image value
+                    let webPageImage = themeConfig.image || `${baseUrl}/img/logo.png`;
 
                     const metaNodeList = dom.window.document.querySelectorAll('meta');
 
