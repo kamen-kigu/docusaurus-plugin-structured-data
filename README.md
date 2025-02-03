@@ -15,9 +15,9 @@ The plugin will generate the following types of structured data, and include the
 ## Installation
 
 ```bash
-npm i @stackql/docusaurus-plugin-structured-data
+npm i @kamen-kigu/docusaurus-plugin-structured-data
 # or
-yarn add @stackql/docusaurus-plugin-structured-data
+yarn add @kamen-kigu/docusaurus-plugin-structured-data
 ```
 
 ## Setup
@@ -27,7 +27,7 @@ Add to `plugins` in `docusaurus.config.js`:
 ```js
 {
   plugins: [
-    '@stackql/docusaurus-plugin-structured-data',
+    '@kamen-kigu/docusaurus-plugin-structured-data',
     ...
   ]
 }
