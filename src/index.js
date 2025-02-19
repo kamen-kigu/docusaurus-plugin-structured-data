@@ -14,6 +14,9 @@ module.exports = function (context) {
         );
     }
 
+    // Initialize breadcrumbLabelMap if not provided
+    structuredData.breadcrumbLabelMap = structuredData.breadcrumbLabelMap || {};
+
     const baseUrl = siteConfig.url;
     const orgName = siteConfig.title;
     const titleDelimiter = siteConfig.titleDelimiter;
@@ -36,16 +39,6 @@ module.exports = function (context) {
         publisher: {
             '@id': `${baseUrl}/#organization`,
         },
-        potentialAction: [
-            {
-              '@type': 'SearchAction',
-              target: {
-                '@type': 'EntryPoint',
-                urlTemplate: `${baseUrl}/search?q={searchTerms}`,
-              },
-              'query-input': 'required name=searchTerms'
-            }
-          ],
         ...structuredData.website,
     };
 
@@ -71,7 +64,7 @@ module.exports = function (context) {
     };
 
     function getBreadcrumbLabel(token){
-        if (structuredData.breadcrumbLabelMap.hasOwnProperty(token)){
+        if (structuredData.breadcrumbLabelMap && structuredData.breadcrumbLabelMap.hasOwnProperty(token)){
             return structuredData.breadcrumbLabelMap[token];
         } else {
             return token;
@@ -82,20 +75,7 @@ module.exports = function (context) {
     name: 'docusaurus-plugin-structured-data',
     async postBuild({siteConfig = {}, routesPaths = [], outDir}) {
         routesPaths.map((route) => {
-
-            if(
-                route === '/tags' || 
-                route.startsWith('/tags/') || 
-                route.startsWith('/page/') ||
-                route === '/blog/tags' || 
-                route.startsWith('/blog/tags/') || 
-                route.startsWith('/blog/page/')
-                ) {
-                return;
-            }
-            
-            if (!['/404.html', '/search'].includes(route)) {
-   
+            if (!['/404.html'].includes(route)) {
                 let filePath;
                 
                 if (fs.existsSync(path.join(outDir, route)) && fs.lstatSync(path.join(outDir, route)).isDirectory()) {
@@ -135,7 +115,7 @@ module.exports = function (context) {
                     // get page type and image...
                     let webPageType = 'website';
                     // Add default image value
-                    let webPageImage = themeConfig.image || `${baseUrl}/img/logo.png`;
+                    let webPageImage = themeConfig.image || `${baseUrl}/icons/logo.png`;
 
                     const metaNodeList = dom.window.document.querySelectorAll('meta');
 
@@ -165,12 +145,12 @@ module.exports = function (context) {
                     let webPageData = {
                         '@type': 'WebPage',
                         isPartOf: {
-                            '@id': `${baseUrl}/#website`
+                            '@id': `${baseUrl}#website`
                         },
                         ...structuredData.webpage,
                     };
 
-                    webPageData['@id'] = `${webPageUrl}/#webpage`;
+                    webPageData['@id'] = `${webPageUrl}#webpage`;
                     webPageData['url'] = `${webPageUrl}`;
                     webPageData['name'] = webPageTitle;
                     webPageData['description'] = webPageDescription;
@@ -178,7 +158,7 @@ module.exports = function (context) {
                     webPageData['datePublished'] = structuredData.webpage.datePublished || new Date().toISOString();
                     webPageData['dateModified'] = new Date().toISOString();
                     webPageData['breadcrumb'] = {
-                        '@id': `${webPageUrl}/#breadcrumb`
+                        '@id': `${webPageUrl}#breadcrumb`
                     };
                     webPageData['potentialAction'] = [
                         {
@@ -197,7 +177,7 @@ module.exports = function (context) {
                     
                     let breadcrumbData = {
                         '@type': 'BreadcrumbList',
-                        '@id': `${webPageUrl}/#breadcrumb`,
+                        '@id': `${webPageUrl}#breadcrumb`,
                         itemListElement: [],
                     };
 
@@ -222,52 +202,32 @@ module.exports = function (context) {
                             }
                             break;
                         case 1:
-                            // its a top level leaf page, docs or blog
+                            // its a top level page
                             breadcrumbData.itemListElement.push(breadcrumbHomeData);
-                            switch (routeArray[0]) {
-                                case 'docs':
-                                    pageName = 'Documentation';
-                                    elementIndex = 2;
-                                    break;
-                                case 'blog':
-                                    if (route === '/blog'){
-                                        // its the blog index
-                                        pageName = 'Blog';
-                                        elementIndex = 2;
-                                    } else {
-                                        // its a blog post
-                                        breadcrumbData.itemListElement.push(breadcrumbBlogData);
-                                        pageName = `${webPageTitle}`;
-                                        elementIndex = 3;
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
+                            pageName = `${webPageTitle}`;
+                            elementIndex = 2;
                             break;
                         default:
-                            // its a nested (docs) leaf page
+                            // its a nested page
                             breadcrumbData.itemListElement.push(breadcrumbHomeData);
-                            switch (routeArray[0]) {
-                                case 'docs':
-                                    breadcrumbData.itemListElement.push(breadcrumbDocsData);
-                                    break;
-                                default:
-                                    break;
-                            }
+                            
+                            // Build nested breadcrumb path
                             routeArray.forEach((element, index) => {
-                                if (['docs'].includes(element)){
+                                if (index === routeArray.length - 1) {
+                                    // Last element handled separately
                                     return;
                                 }
-                                if (index === 1) {
-                                    pageName = element;
-                                } else {
-                                    pageName = `${pageName} - ${element}`;
-                                }
+                                
+                                breadcrumbData.itemListElement.push({
+                                    '@type': 'ListItem',
+                                    position: index + 2, // +2 because home is position 1
+                                    item: `${baseUrl}/${routeArray.slice(0, index + 1).join('/')}`,
+                                    name: getBreadcrumbLabel(element)
+                                });
                             });
                             
-                            pageName = `${pageName} - ${webPageTitle}`;
-                            elementIndex = 3;
+                            pageName = webPageTitle;
+                            elementIndex = routeArray.length + 1;
                             break;
                     }
 
