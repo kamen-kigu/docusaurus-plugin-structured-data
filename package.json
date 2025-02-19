@@ -1,6 +1,6 @@
 {
     "name": "@kamen-kigu/docusaurus-plugin-structured-data",
-    "version": "2",
+    "version": "2.0.0",
     "description": "Forked plugin which adds structured data to kig.wiki docusaurus site.",
     "main": "src/index.js",
     "publishConfig": {
