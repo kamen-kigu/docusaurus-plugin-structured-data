@@ -49,20 +49,6 @@ module.exports = function (context) {
         name: 'Home',
     };
 
-    const breadcrumbDocsData = {
-        '@type': 'ListItem',
-        position: 2,
-        item: `${baseUrl}/docs`,
-        name: 'Documentation',
-    };
-
-    const breadcrumbBlogData = {
-        '@type': 'ListItem',
-        position: 2,
-        item: `${baseUrl}/blog`,
-        name: 'Blog',
-    };
-
     function getBreadcrumbLabel(token){
         if (structuredData.breadcrumbLabelMap && structuredData.breadcrumbLabelMap.hasOwnProperty(token)){
             return structuredData.breadcrumbLabelMap[token];
